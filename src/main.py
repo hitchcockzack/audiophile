@@ -19,6 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.auth.spotify_auth import get_authenticated_spotify
 from src.data.collector import SpotifyDataCollector
+from src.database.models import AudiophileDatabase
 
 load_dotenv()
 
@@ -33,9 +34,13 @@ def main():
         print("\n🔐 Step 1: Authenticating with Spotify...")
         spotify = get_authenticated_spotify()
 
-        # Step 2: Data Collection
-        print("\n📊 Step 2: Collecting your music data...")
-        collector = SpotifyDataCollector(spotify)
+        # Step 2: Database Setup
+        print("\n🗄️  Step 2: Initializing database...")
+        database = AudiophileDatabase()
+
+        # Step 3: Data Collection
+        print("\n📊 Step 3: Collecting your music data...")
+        collector = SpotifyDataCollector(spotify, database)
         user_data = collector.collect_user_profile_data()
 
         # Save collected data

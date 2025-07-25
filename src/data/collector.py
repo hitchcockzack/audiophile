@@ -21,14 +21,19 @@ load_dotenv()
 class SpotifyDataCollector:
     """Collects and processes user listening data from Spotify."""
 
-    def __init__(self, spotify_client: spotipy.Spotify):
+    def __init__(self, spotify_client: spotipy.Spotify, database=None):
         """
         Initialize the data collector.
 
         Args:
             spotify_client: Authenticated Spotify client
+            database: Database instance (optional, will create if not provided)
         """
         self.spotify = spotify_client
+        self.database = database
+        if self.database is None:
+            from src.database.models import AudiophileDatabase
+            self.database = AudiophileDatabase()
         self.top_tracks_limit = int(os.getenv('TOP_TRACKS_LIMIT', 50))
 
     def get_top_tracks(self, time_range: str = 'medium_term', limit: Optional[int] = None) -> List[Dict]:
@@ -171,12 +176,17 @@ class SpotifyDataCollector:
 
     def collect_user_profile_data(self) -> Dict[str, any]:
         """
-        Collect comprehensive user profile data.
+        Collect comprehensive user profile data and save to database.
 
         Returns:
             Dictionary containing all user data including tracks and features
         """
+        start_time = datetime.now()
         print("🎵 Starting comprehensive data collection...")
+
+        # Get user info and save to database
+        user_info = self.spotify.current_user()
+        user_id = self.database.save_user_profile(user_info)
 
         all_tracks = []
 
@@ -216,14 +226,41 @@ class SpotifyDataCollector:
         # Create features lookup
         features_dict = {f['id']: f for f in audio_features}
 
-        # Combine track info with audio features
+        # Save to database and combine track info with audio features
+        print("\n💾 Saving to database...")
         enriched_tracks = []
+        saved_count = 0
+
         for track in unique_tracks_list:
             if track['id'] in features_dict:
+                # Save track to database
+                self.database.save_track(track)
+
+                # Save audio features to database
+                self.database.save_audio_features(features_dict[track['id']])
+
+                # Save user interaction
+                self.database.save_user_track_interaction(
+                    user_id, track['id'], track.get('source', 'unknown')
+                )
+
+                # Add to enriched tracks
                 track['audio_features'] = features_dict[track['id']]
                 enriched_tracks.append(track)
+                saved_count += 1
+
+        # Log collection session
+        self.database.log_collection_session(
+            user_id=user_id,
+            collection_type='full_profile',
+            tracks_collected=len(unique_tracks_list),
+            tracks_with_features=len(enriched_tracks),
+            start_time=start_time,
+            status='completed'
+        )
 
         user_data = {
+            'user_id': user_id,
             'tracks': enriched_tracks,
             'total_tracks': len(enriched_tracks),
             'collection_date': datetime.now().isoformat(),
@@ -236,7 +273,7 @@ class SpotifyDataCollector:
             }
         }
 
-        print(f"\n✅ Data collection complete! Processed {user_data['total_tracks']} tracks with audio features")
+        print(f"\n✅ Data collection complete! Saved {saved_count} tracks to database")
         return user_data
 
     def _extract_track_info(self, track: Dict) -> Dict:
@@ -305,6 +342,7 @@ class SpotifyDataCollector:
 if __name__ == "__main__":
     """Test the data collection module."""
     from src.auth.spotify_auth import get_authenticated_spotify
+    from src.database.models import AudiophileDatabase
 
     try:
         print("🎵 Testing Spotify Data Collection...")
@@ -312,8 +350,9 @@ if __name__ == "__main__":
         # Get authenticated client
         spotify = get_authenticated_spotify()
 
-        # Create collector
-        collector = SpotifyDataCollector(spotify)
+        # Create database and collector
+        database = AudiophileDatabase()
+        collector = SpotifyDataCollector(spotify, database)
 
         # Collect sample data
         user_data = collector.collect_user_profile_data()
