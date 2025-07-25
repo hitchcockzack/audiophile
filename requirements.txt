@@ -1,0 +1,31 @@
+# Spotify API Integration
+spotipy==2.23.0
+
+# Data Processing and Analysis
+pandas==2.1.4
+numpy==1.24.3
+scikit-learn==1.3.2
+
+# Configuration and Environment
+python-dotenv==1.0.0
+
+# HTTP Requests
+requests==2.31.0
+
+# Data Storage
+sqlite3  # Built into Python
+
+# Optional: Enhanced Data Analysis
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Optional: Web Framework (for future dashboard)
+flask==3.0.0
+
+# Optional: Scheduling and Tasks
+schedule==1.2.0
+
+# Development and Testing
+pytest==7.4.3
+black==23.12.1
+flake8==6.1.0

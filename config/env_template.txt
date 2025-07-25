@@ -1,0 +1,25 @@
+# Copy this file to .env and fill in your actual values
+
+# Spotify API Credentials
+# Get these from: https://developer.spotify.com/dashboard
+SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_CLIENT_SECRET=your_client_secret_here
+SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
+
+# User Configuration
+SPOTIFY_USERNAME=your_spotify_username
+
+# Playlist Configuration
+PLAYLIST_NAME=Sound Mirror
+PLAYLIST_DESCRIPTION=Daily music recommendations based on your audio taste profile
+
+# Analysis Configuration
+TOP_TRACKS_LIMIT=50
+RECOMMENDATIONS_LIMIT=20
+
+# Optional: Weather API (for context-aware recommendations)
+WEATHER_API_KEY=your_openweather_api_key
+CITY=your_city
+
+# Database
+DATABASE_PATH=data/audiophile.db
