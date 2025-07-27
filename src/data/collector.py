@@ -218,62 +218,49 @@ class SpotifyDataCollector:
         unique_tracks_list = list(unique_tracks.values())
         print(f"\n🎯 Found {len(unique_tracks_list)} unique tracks after deduplication")
 
-        # Get audio features for all unique tracks
-        print("\n🎼 Collecting audio features...")
-        track_ids = [track['id'] for track in unique_tracks_list]
-        audio_features = self.get_audio_features(track_ids)
+        # Skip audio features - deprecated by Spotify as of Nov 27, 2024
+        print("\n⚠️  Skipping audio features (deprecated by Spotify for new apps)")
+        print("    Your music data will still be collected and analyzed!")
 
-        # Create features lookup
-        features_dict = {f['id']: f for f in audio_features}
-
-        # Save to database and combine track info with audio features
+        # Save to database without audio features
         print("\n💾 Saving to database...")
-        enriched_tracks = []
         saved_count = 0
 
         for track in unique_tracks_list:
-            if track['id'] in features_dict:
-                # Save track to database
-                self.database.save_track(track)
+            # Save track to database
+            self.database.save_track(track)
 
-                # Save audio features to database
-                self.database.save_audio_features(features_dict[track['id']])
-
-                # Save user interaction
-                self.database.save_user_track_interaction(
-                    user_id, track['id'], track.get('source', 'unknown')
-                )
-
-                # Add to enriched tracks
-                track['audio_features'] = features_dict[track['id']]
-                enriched_tracks.append(track)
-                saved_count += 1
+            # Save user interaction
+            self.database.save_user_track_interaction(
+                user_id, track['id'], track.get('source', 'unknown')
+            )
+            saved_count += 1
 
         # Log collection session
         self.database.log_collection_session(
             user_id=user_id,
             collection_type='full_profile',
             tracks_collected=len(unique_tracks_list),
-            tracks_with_features=len(enriched_tracks),
+            tracks_with_features=0,  # No features available
             start_time=start_time,
             status='completed'
         )
 
+        print(f"✅ Data collection complete! Saved {saved_count} tracks to database")
+
+        # Return data structure
         user_data = {
-            'user_id': user_id,
-            'tracks': enriched_tracks,
-            'total_tracks': len(enriched_tracks),
-            'collection_date': datetime.now().isoformat(),
-            'track_sources': {
-                'top_tracks_short': len([t for t in all_tracks if 'top_tracks_short_term' in t.get('source', '')]),
-                'top_tracks_medium': len([t for t in all_tracks if 'top_tracks_medium_term' in t.get('source', '')]),
-                'top_tracks_long': len([t for t in all_tracks if 'top_tracks_long_term' in t.get('source', '')]),
-                'recently_played': len([t for t in all_tracks if 'recently_played' in t.get('source', '')]),
-                'saved_tracks': len([t for t in all_tracks if 'saved_tracks' in t.get('source', '')])
+            'user_info': user_info,
+            'tracks': unique_tracks_list,
+            'total_tracks': len(unique_tracks_list),
+            'collection_session': {
+                'start_time': start_time,
+                'end_time': datetime.now(),
+                'tracks_collected': len(unique_tracks_list),
+                'audio_features_note': 'Audio features unavailable - deprecated by Spotify'
             }
         }
 
-        print(f"\n✅ Data collection complete! Saved {saved_count} tracks to database")
         return user_data
 
     def _extract_track_info(self, track: Dict) -> Dict:

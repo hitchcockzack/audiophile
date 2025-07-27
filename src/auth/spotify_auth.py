@@ -110,6 +110,16 @@ def get_authenticated_spotify() -> spotipy.Spotify:
     return auth.get_spotify_client()
 
 
+def get_spotify_client() -> spotipy.Spotify:
+    """
+    Alternative convenience function to get an authenticated Spotify client.
+
+    Returns:
+        spotipy.Spotify: Authenticated Spotify client
+    """
+    return get_authenticated_spotify()
+
+
 if __name__ == "__main__":
     """Test the authentication module."""
     try:
@@ -122,7 +132,7 @@ if __name__ == "__main__":
         print(f"User ID: {user_info['id']}")
         print(f"Display Name: {user_info['display_name']}")
         print(f"Followers: {user_info['followers']['total']}")
-        print(f"Country: {user_info['country']}")
+        print(f"Country: {user_info.get('country', 'Not specified')}")
 
         print("✅ Authentication test completed successfully!")
 

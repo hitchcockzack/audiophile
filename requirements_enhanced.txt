@@ -1,0 +1,60 @@
+# Core dependencies
+spotipy==2.23.0
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Database
+sqlite3
+
+# Data analysis and machine learning
+pandas==2.1.0
+numpy==1.25.0
+scikit-learn==1.3.0
+
+# Audio analysis
+librosa==0.10.1
+soundfile==0.12.1
+
+# Advanced audio analysis (optional but recommended)
+essentia==2.1b6.dev1109
+madmom==0.16.1
+
+# Natural language processing for lyrics
+textblob==0.17.1
+nltk==3.8.1
+
+# Web framework
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+
+# Date/time utilities
+python-dateutil==2.8.2
+
+# Image processing (for album art)
+Pillow==10.0.0
+
+# HTTP client
+httpx==0.24.1
+
+# Utilities
+tqdm==4.66.1
+colorama==0.4.6
+
+# Development and testing (optional)
+pytest==7.4.0
+black==23.7.0
+flake8==6.0.0
+
+# Optional: For enhanced audio analysis
+# aubio==0.4.9
+# pyaudio==0.2.11
+# scipy==1.11.0
+
+# Optional: For advanced ML features
+# torch==2.0.0
+# tensorflow==2.13.0
+
+# Optional: For enhanced visualization
+# matplotlib==3.7.0
+# seaborn==0.12.0
+# plotly==5.15.0

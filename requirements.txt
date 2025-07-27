@@ -1,28 +1,18 @@
-# Spotify API Integration
-spotipy>=2.22.0
-
-# Data Processing and Analysis
-pandas>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
-
-# Configuration and Environment
+# Core Spotify and audio analysis
+spotipy>=2.23.0
 python-dotenv>=1.0.0
-
-# HTTP Requests
+pandas>=2.1.0
+numpy>=1.25.0
+scikit-learn>=1.3.0
 requests>=2.31.0
 
-# Optional: Enhanced Data Analysis
-matplotlib>=3.7.0
-seaborn>=0.12.0
+# Web application (for enhanced interface)
+Flask>=2.3.3
+Flask-SocketIO>=5.3.6
 
-# Optional: Web Framework (for future dashboard)
-flask>=2.3.0
+# Date utilities
+python-dateutil>=2.8.2
 
-# Optional: Scheduling and Tasks
-schedule>=1.2.0
-
-# Development and Testing
-pytest>=7.4.0
-black>=23.0.0
-flake8>=6.0.0
+# Audio analysis (optional but recommended)
+librosa>=0.10.1
+soundfile>=0.12.1

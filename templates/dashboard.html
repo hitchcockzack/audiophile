@@ -1,0 +1,668 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Audiophile{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1">Welcome back, {{ user_name }}!</h1>
+                    <p class="text-muted">Discover your next favorite song with AI-powered recommendations</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary me-2" onclick="generateRecommendations()">
+                        <i class="fas fa-magic"></i> Get Recommendations
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="analyzeRelativePopularity()">
+                        <i class="fas fa-chart-line"></i> Analyze Tracks
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="total-tracks">{{ user_stats.total_tracks or 0 }}</div>
+                        <div class="stats-label">Tracks Analyzed</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="recommendation-accuracy">{{ "%.0f"|format((user_stats.recommendation_accuracy or 0) * 100) }}%</div>
+                        <div class="stats-label">Recommendation Accuracy</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="discovery-score">{{ "%.0f"|format((user_stats.discovery_score or 0) * 100) }}%</div>
+                        <div class="stats-label">Discovery Score</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="total-feedback">{{ user_stats.total_feedback or 0 }}</div>
+                        <div class="stats-label">Feedback Given</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="row">
+                <!-- Recommendations Panel -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-music me-2"></i>Smart Recommendations
+                            </h5>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="setRecommendationType('personalized')">Personalized</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="setRecommendationType('discovery')">Discovery</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="setRecommendationType('mood')">Mood</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Recommendation Controls -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="mood-select" class="form-label">Mood (optional)</label>
+                                    <select class="form-control" id="mood-select">
+                                        <option value="">Any Mood</option>
+                                        <option value="energetic">Energetic</option>
+                                        <option value="chill">Chill</option>
+                                        <option value="happy">Happy</option>
+                                        <option value="sad">Sad</option>
+                                        <option value="party">Party</option>
+                                        <option value="focus">Focus</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="recommendation-count" class="form-label">Number of Recommendations</label>
+                                    <input type="range" class="form-range" id="recommendation-count" min="5" max="50" value="20">
+                                    <small class="text-muted">Count: <span id="count-display">20</span></small>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="recommendations-loading" class="text-center py-4" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Generating intelligent recommendations...</p>
+                            </div>
+
+                            <!-- Recommendations List -->
+                            <div id="recommendations-list">
+                                {% if recommendations %}
+                                    {% for rec in recommendations %}
+                                    <div class="track-item" data-track-id="{{ rec.id }}">
+                                        <div class="track-artwork">
+                                            {% if rec.album and rec.album.images %}
+                                                <img src="{{ rec.album.images[0].url }}" alt="Album art" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                                <i class="fas fa-music text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="track-info">
+                                            <div class="track-name">{{ rec.name }}</div>
+                                            <div class="track-artist">{{ rec.artists[0].name if rec.artists else 'Unknown Artist' }}</div>
+                                            {% if rec.similarity_score %}
+                                                <small class="text-muted">Similarity: {{ "%.1f"|format(rec.similarity_score * 100) }}%</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="track-actions">
+                                            <button class="btn btn-sm btn-success" onclick="giveFeedback('{{ rec.id }}', 'like')">
+                                                <i class="fas fa-thumbs-up"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="giveFeedback('{{ rec.id }}', 'dislike')">
+                                                <i class="fas fa-thumbs-down"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="analyzeTrack('{{ rec.id }}')">
+                                                <i class="fas fa-microscope"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-music fa-3x text-muted mb-3"></i>
+                                        <h5>No recommendations yet</h5>
+                                        <p class="text-muted">Click "Get Recommendations" to discover new music!</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side Panel -->
+                <div class="col-lg-4">
+                    <!-- Quick Actions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" onclick="window.location.href='/discover'">
+                                    <i class="fas fa-compass me-2"></i>Discovery Mode
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="createSmartPlaylist()">
+                                    <i class="fas fa-list-music me-2"></i>Create Smart Playlist
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="window.location.href='/analytics'">
+                                    <i class="fas fa-chart-line me-2"></i>View Analytics
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="trainAlgorithm()">
+                                    <i class="fas fa-brain me-2"></i>Train Algorithm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Insights -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-heart me-2"></i>Feedback Insights
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if feedback_analytics %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Positive Feedback</span>
+                                        <span class="text-success">{{ feedback_analytics.positive_feedback or 0 }}</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar bg-success" style="width: {{ (feedback_analytics.positive_feedback or 0) / max(1, (feedback_analytics.total_feedback or 1)) * 100 }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Algorithm Learning</span>
+                                        <span class="text-primary">{{ "%.0f"|format((feedback_analytics.learning_progress or 0) * 100) }}%</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar" style="width: {{ (feedback_analytics.learning_progress or 0) * 100 }}%"></div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    Last update: {{ feedback_analytics.last_updated or 'Never' }}
+                                </small>
+                            {% else %}
+                                <p class="text-muted mb-0">Start giving feedback to see insights!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-clock me-2"></i>Recent Activity
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="activity-feed">
+                                <div class="activity-item mb-2">
+                                    <i class="fas fa-thumbs-up text-success me-2"></i>
+                                    <small>Liked "Song Title" • 2 hours ago</small>
+                                </div>
+                                <div class="activity-item mb-2">
+                                    <i class="fas fa-magic text-primary me-2"></i>
+                                    <small>Generated recommendations • 5 hours ago</small>
+                                </div>
+                                <div class="activity-item mb-2">
+                                    <i class="fas fa-brain text-info me-2"></i>
+                                    <small>Algorithm adapted • 1 day ago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Modal -->
+<div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-microscope me-2"></i>Track Analysis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="analysis-loading" class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Analyzing...</span>
+                    </div>
+                    <p class="mt-2">Performing hyperdimensional analysis...</p>
+                </div>
+                <div id="analysis-results" style="display: none;">
+                    <!-- Analysis results will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Playlist Creation Modal -->
+<div class="modal fade" id="playlistModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-list-music me-2"></i>Create Smart Playlist
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="playlist-form">
+                    <div class="mb-3">
+                        <label for="playlist-name" class="form-label">Playlist Name</label>
+                        <input type="text" class="form-control" id="playlist-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="playlist-length" class="form-label">Number of Tracks</label>
+                        <input type="range" class="form-range" id="playlist-length" min="10" max="100" value="30">
+                        <small class="text-muted">Tracks: <span id="playlist-length-display">30</span></small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="diversity-factor" class="form-label">Diversity</label>
+                        <input type="range" class="form-range" id="diversity-factor" min="0" max="100" value="30">
+                        <small class="text-muted">
+                            <span id="diversity-display">30</span>%
+                            (0% = Very Similar, 100% = Very Diverse)
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitPlaylistCreation()">Create Playlist</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentRecommendationType = 'personalized';
+let currentRecommendations = [];
+
+// Socket event handlers
+if (socket) {
+    socket.on('recommendations_ready', function(data) {
+        hideRecommendationsLoading();
+        displayRecommendations(data.recommendations);
+        showNotification('New recommendations generated!', 'success');
+    });
+
+    socket.on('analysis_complete', function(data) {
+        hideAnalysisLoading();
+        displayAnalysisResults(data);
+    });
+
+    socket.on('feedback_received', function(data) {
+        showNotification('Feedback recorded! Algorithm is learning...', 'success');
+        updateActivityFeed('feedback', data);
+    });
+}
+
+// Recommendation functions
+function setRecommendationType(type) {
+    currentRecommendationType = type;
+
+    // Update button states
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function generateRecommendations() {
+    showRecommendationsLoading();
+
+    const mood = document.getElementById('mood-select').value;
+    const count = parseInt(document.getElementById('recommendation-count').value);
+
+    const params = {
+        type: currentRecommendationType,
+        count: count,
+        mood: mood || undefined,
+        discovery_mode: currentRecommendationType === 'discovery'
+    };
+
+    if (socket && socket.connected) {
+        socket.emit('request_recommendations', params);
+    } else {
+        // Fallback to API
+        apiRequest('/api/recommendations', {
+            method: 'POST',
+            body: JSON.stringify(params)
+        }).then(data => {
+            hideRecommendationsLoading();
+            displayRecommendations(data.recommendations);
+        }).catch(error => {
+            hideRecommendationsLoading();
+            showNotification('Error generating recommendations: ' + error.message, 'danger');
+        });
+    }
+}
+
+function showRecommendationsLoading() {
+    document.getElementById('recommendations-loading').style.display = 'block';
+    document.getElementById('recommendations-list').style.display = 'none';
+}
+
+function hideRecommendationsLoading() {
+    document.getElementById('recommendations-loading').style.display = 'none';
+    document.getElementById('recommendations-list').style.display = 'block';
+}
+
+function displayRecommendations(recommendations) {
+    currentRecommendations = recommendations;
+    const container = document.getElementById('recommendations-list');
+
+    if (!recommendations || recommendations.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-music fa-3x text-muted mb-3"></i>
+                <h5>No recommendations found</h5>
+                <p class="text-muted">Try adjusting your preferences or mood selection.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const html = recommendations.map(rec => `
+        <div class="track-item fade-in" data-track-id="${rec.id}">
+            <div class="track-artwork">
+                ${rec.album && rec.album.images ?
+                    `<img src="${rec.album.images[0].url}" alt="Album art" style="width: 100%; height: 100%; object-fit: cover;">` :
+                    `<i class="fas fa-music text-muted"></i>`
+                }
+            </div>
+            <div class="track-info">
+                <div class="track-name">${rec.name}</div>
+                <div class="track-artist">${rec.artists ? rec.artists[0].name : 'Unknown Artist'}</div>
+                ${rec.similarity_score ?
+                    `<small class="text-muted">Similarity: ${(rec.similarity_score * 100).toFixed(1)}%</small>` : ''
+                }
+                ${rec.discovery_potential ?
+                    `<small class="text-success">Discovery Potential: ${(rec.discovery_potential * 100).toFixed(0)}%</small>` : ''
+                }
+                ${rec.momentum ?
+                    `<small class="text-info">Momentum: ${(rec.momentum * 100).toFixed(0)}%</small>` : ''
+                }
+            </div>
+            <div class="track-actions">
+                <button class="btn btn-sm btn-success" onclick="giveFeedback('${rec.id}', 'like')" title="Like">
+                    <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="giveFeedback('${rec.id}', 'dislike')" title="Dislike">
+                    <i class="fas fa-thumbs-down"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="giveFeedback('${rec.id}', 'love')" title="Love">
+                    <i class="fas fa-heart"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="analyzeTrack('${rec.id}')" title="Analyze">
+                    <i class="fas fa-microscope"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = html;
+}
+
+// Feedback functions
+function giveFeedback(trackId, feedbackType) {
+    const context = {
+        recommendation_type: currentRecommendationType,
+        mood: document.getElementById('mood-select').value,
+        timestamp: new Date().toISOString()
+    };
+
+    apiRequest('/api/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+            track_id: trackId,
+            feedback_type: feedbackType,
+            context: context
+        })
+    }).then(data => {
+        showNotification(`${feedbackType.charAt(0).toUpperCase() + feedbackType.slice(1)} feedback recorded!`, 'success');
+        updateTrackFeedbackUI(trackId, feedbackType);
+    }).catch(error => {
+        showNotification('Error recording feedback: ' + error.message, 'danger');
+    });
+}
+
+function updateTrackFeedbackUI(trackId, feedbackType) {
+    const trackElement = document.querySelector(`[data-track-id="${trackId}"]`);
+    if (trackElement) {
+        // Add visual feedback
+        trackElement.style.backgroundColor = feedbackType === 'like' || feedbackType === 'love' ?
+            'rgba(29, 185, 84, 0.1)' : 'rgba(231, 76, 60, 0.1)';
+
+        setTimeout(() => {
+            trackElement.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
+// Analysis functions
+function analyzeTrack(trackId) {
+    const modal = new bootstrap.Modal(document.getElementById('analysisModal'));
+    modal.show();
+
+    showAnalysisLoading();
+
+    apiRequest('/api/analyze_track', {
+        method: 'POST',
+        body: JSON.stringify({ track_id: trackId })
+    }).then(data => {
+        showNotification('Track queued for analysis. Results will appear shortly.', 'info');
+    }).catch(error => {
+        hideAnalysisLoading();
+        showNotification('Error queuing track for analysis: ' + error.message, 'danger');
+    });
+}
+
+function showAnalysisLoading() {
+    document.getElementById('analysis-loading').style.display = 'block';
+    document.getElementById('analysis-results').style.display = 'none';
+}
+
+function hideAnalysisLoading() {
+    document.getElementById('analysis-loading').style.display = 'none';
+    document.getElementById('analysis-results').style.display = 'block';
+}
+
+function displayAnalysisResults(data) {
+    const container = document.getElementById('analysis-results');
+
+    container.innerHTML = `
+        <div class="analysis-results">
+            <h6>${data.track_name} - ${data.artist_name}</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="stat-item">
+                        <span class="stat-label">Features Extracted:</span>
+                        <span class="stat-value text-primary">${data.feature_count}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Analysis Complete:</span>
+                        <span class="stat-value text-success">
+                            <i class="fas fa-check"></i> Yes
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stat-item">
+                        <span class="stat-label">Analysis Time:</span>
+                        <span class="stat-value">${formatRelativeTime(data.analysis_timestamp)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    This track has been analyzed using our hyperdimensional audio fingerprinting system,
+                    extracting ${data.feature_count} unique characteristics including vocal tone,
+                    harmonic structure, rhythmic patterns, and emotional markers.
+                </small>
+            </div>
+        </div>
+    `;
+}
+
+function analyzeRelativePopularity() {
+    if (!currentRecommendations.length) {
+        showNotification('Generate some recommendations first!', 'warning');
+        return;
+    }
+
+    const trackIds = currentRecommendations.slice(0, 5).map(rec => rec.id);
+
+    apiRequest('/api/relative_popularity', {
+        method: 'POST',
+        body: JSON.stringify({ track_ids: trackIds })
+    }).then(data => {
+        showNotification(`Analyzed relative popularity for ${data.total_analyzed} tracks`, 'success');
+        console.log('Relative popularity results:', data.results);
+    }).catch(error => {
+        showNotification('Error analyzing relative popularity: ' + error.message, 'danger');
+    });
+}
+
+// Playlist functions
+function createSmartPlaylist() {
+    const modal = new bootstrap.Modal(document.getElementById('playlistModal'));
+    modal.show();
+
+    // Set default name
+    const now = new Date();
+    document.getElementById('playlist-name').value = `AI Playlist ${now.getMonth() + 1}/${now.getDate()}`;
+}
+
+function submitPlaylistCreation() {
+    const name = document.getElementById('playlist-name').value;
+    const length = parseInt(document.getElementById('playlist-length').value);
+    const diversity = parseInt(document.getElementById('diversity-factor').value) / 100;
+
+    if (!name) {
+        showNotification('Please enter a playlist name', 'warning');
+        return;
+    }
+
+    if (!currentRecommendations.length) {
+        showNotification('Generate some recommendations first to use as seeds!', 'warning');
+        return;
+    }
+
+    const seedTracks = currentRecommendations.slice(0, 3).map(rec => rec.id);
+
+    apiRequest('/api/create_playlist', {
+        method: 'POST',
+        body: JSON.stringify({
+            name: name,
+            length: length,
+            diversity: diversity,
+            seed_tracks: seedTracks
+        })
+    }).then(data => {
+        showNotification(data.message, 'success');
+        bootstrap.Modal.getInstance(document.getElementById('playlistModal')).hide();
+    }).catch(error => {
+        showNotification('Error creating playlist: ' + error.message, 'danger');
+    });
+}
+
+function trainAlgorithm() {
+    showNotification('Training algorithm based on your feedback...', 'info');
+
+    apiRequest('/api/train_algorithm', {
+        method: 'POST'
+    }).then(data => {
+        showNotification('Algorithm training completed! Recommendations should improve.', 'success');
+    }).catch(error => {
+        showNotification('Error training algorithm: ' + error.message, 'danger');
+    });
+}
+
+// UI event handlers
+document.getElementById('recommendation-count').addEventListener('input', function() {
+    document.getElementById('count-display').textContent = this.value;
+});
+
+document.getElementById('playlist-length').addEventListener('input', function() {
+    document.getElementById('playlist-length-display').textContent = this.value;
+});
+
+document.getElementById('diversity-factor').addEventListener('input', function() {
+    document.getElementById('diversity-display').textContent = this.value;
+});
+
+function updateActivityFeed(type, data) {
+    const feed = document.getElementById('activity-feed');
+    const newItem = document.createElement('div');
+    newItem.className = 'activity-item mb-2 fade-in';
+
+    let icon, text;
+    switch(type) {
+        case 'feedback':
+            icon = data.feedback_type === 'like' ? 'fa-thumbs-up text-success' : 'fa-thumbs-down text-danger';
+            text = `${data.feedback_type} feedback given • Just now`;
+            break;
+        case 'recommendation':
+            icon = 'fa-magic text-primary';
+            text = 'Generated recommendations • Just now';
+            break;
+        case 'analysis':
+            icon = 'fa-microscope text-info';
+            text = 'Track analyzed • Just now';
+            break;
+        default:
+            icon = 'fa-clock text-muted';
+            text = 'Activity • Just now';
+    }
+
+    newItem.innerHTML = `
+        <i class="fas ${icon} me-2"></i>
+        <small>${text}</small>
+    `;
+
+    feed.insertBefore(newItem, feed.firstChild);
+
+    // Keep only last 5 items
+    while (feed.children.length > 5) {
+        feed.removeChild(feed.lastChild);
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial recommendation type button
+    const personalizedBtn = document.querySelector('.btn-group .btn');
+    if (personalizedBtn) {
+        personalizedBtn.classList.add('active');
+    }
+});
+</script>
+{% endblock %}

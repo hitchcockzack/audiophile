@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+
+{% block title %}Audiophile - Intelligent Music Discovery{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center min-vh-100">
+        <div class="col-lg-6">
+            <div class="hero-content">
+                <h1 class="display-4 fw-bold mb-4">
+                    Discover Music That
+                    <span style="color: var(--primary-color);">Truly Moves You</span>
+                </h1>
+                <p class="lead mb-4">
+                    Experience the future of music discovery with AI-powered recommendations
+                    that understand your taste better than you do. Our advanced algorithms
+                    analyze 300+ audio features to find your next favorite song.
+                </p>
+
+                {% if not session.user_id %}
+                <div class="hero-actions mb-4">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fab fa-spotify me-2"></i>Connect Spotify
+                    </a>
+                    <button class="btn btn-outline-primary btn-lg" onclick="scrollToFeatures()">
+                        Learn More
+                    </button>
+                </div>
+                {% else %}
+                <div class="hero-actions mb-4">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{{ url_for('discover') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-compass me-2"></i>Start Discovering
+                    </a>
+                </div>
+                {% endif %}
+
+                <div class="hero-stats">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">300+</div>
+                            <div class="stat-label">Audio Features</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">AI</div>
+                            <div class="stat-label">Powered</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">∞</div>
+                            <div class="stat-label">Discoveries</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="hero-visual">
+                <div class="audio-visualizer">
+                    <div class="wave-container">
+                        <div class="wave wave1"></div>
+                        <div class="wave wave2"></div>
+                        <div class="wave wave3"></div>
+                        <div class="wave wave4"></div>
+                        <div class="wave wave5"></div>
+                    </div>
+                    <div class="central-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="text-center mb-5">
+            <h2 class="h1 fw-bold">Revolutionary Features</h2>
+            <p class="lead text-muted">
+                Experience music discovery like never before with our advanced AI technology
+            </p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-chart-line fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Relative Popularity Analysis</h5>
+                        <p class="card-text">
+                            Discover tracks that are climbing the ranks within an artist's catalog,
+                            not just globally popular songs. Find hidden gems before they go mainstream.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-brain fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">AI Learning Algorithm</h5>
+                        <p class="card-text">
+                            Our system learns from your feedback and adapts recommendations over time.
+                            The more you use it, the better it gets at predicting your taste.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-microscope fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Hyperdimensional Analysis</h5>
+                        <p class="card-text">
+                            Extract 300+ features from each song including vocal characteristics,
+                            harmonic structure, rhythmic patterns, and emotional markers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-heart fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Smart Feedback System</h5>
+                        <p class="card-text">
+                            Give instant feedback on recommendations. Our algorithm learns your
+                            preferences and continuously improves its suggestions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-list-music fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Intelligent Playlists</h5>
+                        <p class="card-text">
+                            Create perfectly balanced playlists with customizable diversity factors.
+                            Let AI curate your perfect listening experience.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card card h-100">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-compass fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Discovery Mode</h5>
+                        <p class="card-text">
+                            Venture beyond your comfort zone with confidence. Our system finds
+                            songs that are different but still match your taste profile.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-5">
+        <div class="text-center mb-5">
+            <h2 class="h1 fw-bold">How It Works</h2>
+            <p class="lead text-muted">
+                Powered by cutting-edge AI and audio analysis technology
+            </p>
+        </div>
+
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <div class="process-steps">
+                    <div class="step-item mb-4">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h5>Connect Your Spotify</h5>
+                            <p class="text-muted">
+                                Securely connect your Spotify account to analyze your listening history
+                                and understand your musical preferences.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-item mb-4">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h5>AI Analysis</h5>
+                            <p class="text-muted">
+                                Our hyperdimensional analyzer extracts hundreds of features from your
+                                favorite tracks to build your unique taste profile.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-item mb-4">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h5>Smart Recommendations</h5>
+                            <p class="text-muted">
+                                Receive personalized recommendations based on relative popularity,
+                                audio similarity, and your evolving taste preferences.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h5>Continuous Learning</h5>
+                            <p class="text-muted">
+                                Provide feedback to help the algorithm learn and adapt to your
+                                changing musical taste over time.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="process-visual">
+                    <div class="ai-brain">
+                        <div class="brain-core">
+                            <i class="fas fa-brain fa-4x"></i>
+                        </div>
+                        <div class="neural-connections">
+                            <div class="connection c1"></div>
+                            <div class="connection c2"></div>
+                            <div class="connection c3"></div>
+                            <div class="connection c4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    {% if not session.user_id %}
+    <section class="py-5 text-center">
+        <div class="cta-section">
+            <h2 class="h1 fw-bold mb-4">Ready to Transform Your Music Discovery?</h2>
+            <p class="lead mb-4">
+                Join thousands of music lovers who've discovered their new favorite songs with Audiophile.
+            </p>
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                <i class="fab fa-spotify me-2"></i>Get Started Free
+            </a>
+            <p class="mt-3 text-muted">
+                <small>No credit card required. Connect with your existing Spotify account.</small>
+            </p>
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<style>
+.hero-content {
+    padding: 2rem 0;
+}
+
+.hero-stats .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.hero-stats .stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.audio-visualizer {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wave-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.wave {
+    position: absolute;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    opacity: 0;
+    animation: waveAnimation 3s infinite;
+}
+
+.wave1 { width: 60px; height: 60px; animation-delay: 0s; }
+.wave2 { width: 120px; height: 120px; animation-delay: 0.6s; }
+.wave3 { width: 180px; height: 180px; animation-delay: 1.2s; }
+.wave4 { width: 240px; height: 240px; animation-delay: 1.8s; }
+.wave5 { width: 300px; height: 300px; animation-delay: 2.4s; }
+
+@keyframes waveAnimation {
+    0% {
+        opacity: 0;
+        transform: scale(0.1);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+.central-icon {
+    z-index: 10;
+    color: var(--primary-color);
+    font-size: 3rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.ai-brain {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.brain-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--primary-color);
+    z-index: 10;
+}
+
+.neural-connections {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.connection {
+    position: absolute;
+    background: linear-gradient(45deg, var(--primary-color), transparent);
+    border-radius: 2px;
+    opacity: 0;
+    animation: connectionPulse 4s infinite;
+}
+
+.c1 {
+    width: 60px;
+    height: 2px;
+    top: 30%;
+    left: 20%;
+    transform: rotate(45deg);
+    animation-delay: 0s;
+}
+
+.c2 {
+    width: 80px;
+    height: 2px;
+    top: 50%;
+    right: 10%;
+    transform: rotate(-30deg);
+    animation-delay: 1s;
+}
+
+.c3 {
+    width: 50px;
+    height: 2px;
+    bottom: 30%;
+    left: 30%;
+    transform: rotate(60deg);
+    animation-delay: 2s;
+}
+
+.c4 {
+    width: 70px;
+    height: 2px;
+    top: 20%;
+    right: 25%;
+    transform: rotate(-60deg);
+    animation-delay: 3s;
+}
+
+@keyframes connectionPulse {
+    0%, 90% { opacity: 0; }
+    10%, 80% { opacity: 1; }
+}
+
+.cta-section {
+    background: linear-gradient(135deg, var(--dark-elevated) 0%, var(--dark-surface) 100%);
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(29, 185, 84, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        text-align: center;
+        padding: 1rem 0;
+    }
+
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .audio-visualizer {
+        width: 200px;
+        height: 200px;
+        margin-top: 2rem;
+    }
+
+    .ai-brain {
+        width: 150px;
+        height: 150px;
+    }
+}
+</style>
+
+<script>
+function scrollToFeatures() {
+    document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Add some interactive animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate feature cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe feature cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+
+    // Observe step items
+    document.querySelectorAll('.step-item').forEach(step => {
+        step.style.opacity = '0';
+        step.style.transform = 'translateX(-30px)';
+        step.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(step);
+    });
+});
+</script>
+{% endblock %}
